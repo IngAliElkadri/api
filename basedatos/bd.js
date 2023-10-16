@@ -1,27 +1,19 @@
-const mysql = require('mysql2');
-const dbConfig ={
-    host:process.env.HOST_DB,
-    user:process.env.USER_DB,
-    password:process.env.PASSWORD_DB,
-    database:process.env.DB_NAME,
-    port:3306
-};
-const conexion= mysql.createConnection(dbConfig);
+const mysql = require('mysql2/promise');
+async function conectarBaseDeDatos() {
+    try {
+        const conexion = await mysql.createConnection({
+        host:'localhost', 
+        user: 'root',    
+        password: '',
+        database: 'pago_verificado_v02', 
+      });
+      console.log('Conexión exitosa a la base de datos MySQL.');
+      return conexion;
+    } catch (error) {
+      console.error('Error al conectar con la base de datos:', error);
+    }
+  };
 
-conexion.connect((error)=>{
-    if(error){
-        console.log('ERROR AL CONECTAR BASE DE DATOS')
-    }else{
-        console.log('Conexion a la base de datos exitosa')
-    }
-});
-conexion.end((error)=>{
-    if(error){
-        console.log('ERROR AL CERRAR CONEXION CON BASE DE DATOS');
-    }else{
-        console.log('CONEXION CON LA BASE DE DATOS CERRADA EXITOSAMENTE')
-    }
-});
 module.exports = {
-    conexion,
+    conectarBaseDeDatos,
 };

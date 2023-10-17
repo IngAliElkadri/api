@@ -25,7 +25,11 @@ async function manejarToken(usuarioId, secretkey) {
   if (resu && resu[0] && resu[0][0] && resu[0][0].token) {
     const tokenString = resu[0][0].token;
     const token = await verificaToken(tokenString, secretkey, usuarioId);
-    return token;
+    if (token.length>100){
+      const registrartoken = await consultasbd.registrarToken(usuarioId, token, '1h');
+      return tokenString;
+    }
+    return {token,tokenString};
   } else {
     // Si no hay un token existente, genera uno nuevo
     const informacion = { usuarioId };
@@ -45,7 +49,7 @@ ruter.post('/inicioSesion', async (req, res) => {
     const resultado = operacion[1][0][0];
     if (resultado) {
       const token = await manejarToken(resultado.id, secretkey);
-      res.send({ token });
+      res.send({ token,resultado });
     } else {
       res.status(404).json({ message: 'Credenciales incorrectas' });
     }

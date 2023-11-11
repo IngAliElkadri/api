@@ -87,56 +87,57 @@ ruter.get('/usuario/verpagos/:id_reportante', async (req, res) => {
 });
 ruter.post('/usuario/reportarpedido/', async (req, res) => {
   try {
-    const { id_reportante,cantidad_prod,//datos reportante
-     nombre,apellido,cedula,telefono,direccion,//datos cliente
-     nombre_producto,descripcion,precio } =req.body //datos productos
-    //falta pedido debe ser manejada la informacion en la consulta sql
-    //const {id_pedido,nombre_delivery} = req.body //datos delivery
-    var comprobarexitecliente = await consultasbd.comExicliente(cedula);
-    var id_cliente;
-    var verificarprod;
-    var id_producto;
-    var reportarpedido;
-    var registrarProducto;
-    var registrarcliente;
-    console.log(comprobarexitecliente[0][0]);
-    if (comprobarexitecliente[0][0]){
-      verificarprod = await consultasbd.comExiPro(nombre_producto,descripcion)
-     // console.log(verificarprod);
-      id_cliente=await consultasbd.comExicliente(cedula);
-      if (verificarprod[0][0]){ //si existe el producto
-        id_producto =verificarprod[0][0].id;
-        reportarpedido=consultasbd.Repedido(cedula,id_cliente,id_reportante,id_producto,cantidad_prod,precio,1);
-        res.status(200).json('Pedido registrado exitosamente');
+    const { id_reportante, cantidad_prod, // datos reportante
+      nombre, apellido, cedula, telefono, direccion, // datos cliente
+      nombre_producto, descripcion, precio } = req.body; // datos productos
+    
+    let id_cliente, id_producto, verificarprod, reportarpedido, registrarProducto, registrarCliente;
+
+    const comprobarexitecliente = await consultasbd.comExicliente(cedula);
+    
+    if (comprobarexitecliente && comprobarexitecliente.length > 1 && comprobarexitecliente[0].length > 0) {
+      id_cliente = comprobarexitecliente[0][0].id;
+      verificarprod = await consultasbd.comExiPro(nombre_producto, descripcion);
+
+      if (verificarprod && verificarprod.length > 1 && verificarprod[0].length > 0) {
+        id_producto = verificarprod[0][0].id;
+      } else {
+        // si el producto no existe, lo registra y se obtiene su id 
+        registrarProducto = await consultasbd.reProducto(nombre_producto, descripcion, precio);
+        verificarprod = await consultasbd.comExiPro(nombre_producto, descripcion);
+        id_producto = verificarprod[0][0].id;
       }
-      else{
-        registrarProducto= await consultasbd.reProducto(nombre_producto,descripcion,precio);
-        reportarpedido=await consultasbd.Repedido(cedula,id_cliente,id_reportante,id_producto,cantidad_prod,precio,1);
-        res.status(200).json('Pedido registrado exitosamente');
+
+      // registro del pedido
+      reportarpedido = await consultasbd.Repedido(cedula, id_cliente, id_reportante, id_producto, cantidad_prod, precio, 1);
+      res.status(200).json({ message: 'Pedido registrado exitosamente' });
+    } else {
+      // Si el cliente no existe, se registra y se obtiene el bendito id
+      registrarCliente = await consultasbd.Recliente(nombre, apellido, cedula, telefono, direccion);
+      const comprobarexiteclienteNuevo = await consultasbd.comExicliente(cedula);
+      
+      if (comprobarexiteclienteNuevo && comprobarexiteclienteNuevo.length > 1 && comprobarexiteclienteNuevo[0].length > 0) {
+        id_cliente = comprobarexiteclienteNuevo[0][0].id;
+        verificarprod = await consultasbd.comExiPro(nombre_producto, descripcion);
+
+        if (verificarprod && verificarprod.length > 1 && verificarprod[0].length > 0) {
+          id_producto = verificarprod[0][0].id;
+        } else {
+          // Si el producto no existe, se registra y se obtiene su id
+          registrarProducto = await consultasbd.reProducto(nombre_producto, descripcion, precio);
+          verificarprod = await consultasbd.comExiPro(nombre_producto, descripcion);
+          id_producto = verificarprod[0][0].id;
+        }
+
+        // Registro de pedido
+        reportarpedido = await consultasbd.Repedido(cedula, id_cliente, id_reportante, id_producto, cantidad_prod, precio, 1);
+        res.status(200).json({ message: 'Pedido registrado exitosamente' });
+      } else {
+        res.status(500).json({ message: 'Error en la creación del cliente' });
       }
-    }
-    else{
-      console.log('esto es else');
-      registrarcliente = await consultasbd.Recliente(nombre,apellido,cedula,telefono,direccion);
-      comprobarexitecliente = await consultasbd.comExicliente(cedula);
-      id_cliente=comprobarexitecliente[0][0].id;
-      console.log(id_cliente);
-      verificarprod = await consultasbd.comExiPro(nombre_producto,descripcion)
-      console.log(verificarprod)
-      if (verificarprod && verificarprod.length > 1 && verificarprod[0].length > 0){ //si existe el producto
-        reportarpedido=await consultasbd.Repedido(cedula,id_cliente,id_reportante,id_producto,cantidad_prod,precio,1);
-        console.log('esto es reportar pedido', reportarpedido);
-       }
-       else{
-         await consultasbd.reProducto(nombre_producto,descripcion,precio);
-         verificarprod = await consultasbd.comExiPro(nombre_producto,descripcion)
-         id_producto =verificarprod[0][0].id;
-         await consultasbd.Repedido(cedula,id_cliente,id_reportante,id_producto,cantidad_prod,precio,1);
-         console.log('Producto registrado exitosamente')
-       }
     }
   } catch (error) {
-    console.error('Error viendo reportes de pagos', error);
+    console.error('Error al reportar pedido:', error);
     res.status(500).json({ message: 'Error en /usuario/reportarpedido/' });
   }
 });

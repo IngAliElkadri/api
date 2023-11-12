@@ -162,8 +162,8 @@ async function Recliente(nombre,apellido,cedula,telefono,direccion) {
     console.log('CONEXION CERRADA');
     console.log('cliente registrado con exito');
   } catch (error) {
-    console.log('Error al verificar si el usuario está disponible:', error);
-    throw error; // COMPROBAR NOMBRE USUARIO SI ESTA EXISTENTE
+    console.log('Error al registrar el usuario:', error);
+    throw error; 
   }
 }
 async function Redelivery(id_pedido,nombre_delivery) {
@@ -209,6 +209,23 @@ async function Repedido(id_pedido,id_cliente,id_reportante,id_producto,cantidad,
     throw error; 
   }
 }
+async function Vdeliverysusu(){
+  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=2;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No existen deliverys' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de deliverys:', error);
+    throw error; 
+  }
+}
 module.exports ={
     comprobarlogeo,
     registrarToken,
@@ -220,5 +237,7 @@ module.exports ={
     reProducto,
     Redelivery,
     comExicliente,
-    Repedido
+    Repedido,
+    Redelivery,
+    Vdeliverysusu
 }

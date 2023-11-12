@@ -59,7 +59,6 @@ ruter.post('/inicioSesion', async (req, res) => {
   }
 });
 
-// RUTA INICIO USUARIO (sin el middleware autenticarToken)
 ruter.post('/usuario/reportarpagos', async (req, res) => {
   try {
     const { id_reportante, referencia,monto, banco_id, estado_id, responsable_estado, fecha_aceptado } = req.body;
@@ -141,5 +140,28 @@ ruter.post('/usuario/reportarpedido/', async (req, res) => {
     res.status(500).json({ message: 'Error en /usuario/reportarpedido/' });
   }
 });
-
+ruter.post('/usuario/reportardelivery', async (req, res) => {
+  try {
+    const { id_pedido,nombre_delivery } = req.body;
+    const operacion = await consultasbd.Redelivery(id_pedido,nombre_delivery);
+    res.status(200).json({Message:"Delivery registrado con exito"});
+  } catch (error) {
+    console.error('Error registrando un pago', error);
+    res.status(500).json({ message: 'Error en /usuario/reportardelivery' });
+  }
+});
+ruter.get('/usuario/verdeliverys/', async (req, res) => {
+  try {
+    const operacion = await consultasbd.Vdeliverysusu();
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0][0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay reportes"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de pagos', error);
+    res.status(500).json({ message: 'Error en /usuario/verdeliverys/' });
+  }
+});
 module.exports = ruter;

@@ -88,11 +88,11 @@ async function ExisUsuario(nombre) {
       throw error; // COMPROBAR NOMBRE USUARIO SI ESTA EXISTENTE
     }
   }
-  async function Repago(id_reportante,referencia,monto,banco_id,estado_id,responsable_estado,fecha_aceptado) {
-    const consulta = 'INSERT INTO pagos(id_reportante, referencia, monto, banco_id, estado_id, responsable_estado, fecha_aceptado) VALUES (?,?,?,?,?,?,?)';
+  async function Repago(id_reportante,referencia,monto,banco_id,estado_id) {
+    const consulta = 'INSERT INTO pagos(id_reportante, referencia, monto, banco_id, estado_id) VALUES (?,?,?,?,?)';
     const conexion =await conectarBaseDeDatos()
     try {
-      const result = await conexion.query(consulta, [id_reportante,referencia,monto,banco_id,estado_id,responsable_estado,fecha_aceptado]);
+      const result = await conexion.query(consulta, [id_reportante,referencia,monto,banco_id,estado_id]);
       conexion.end();
       console.log('CONEXION CERRADA');
       console.log('Producto registrado con exito');

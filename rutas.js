@@ -61,8 +61,8 @@ ruter.post('/inicioSesion', async (req, res) => {
 
 ruter.post('/usuario/reportarpagos', async (req, res) => {
   try {
-    const { id_reportante, referencia,monto, banco_id, estado_id, responsable_estado, fecha_aceptado } = req.body;
-    const operacion = await consultasbd.Repago(id_reportante, referencia,monto, banco_id, estado_id, responsable_estado, fecha_aceptado);
+    const { id_reportante, referencia,monto, banco_id, estado_id} = req.body;
+    const operacion = await consultasbd.Repago(id_reportante, referencia,monto, banco_id, estado_id);
     res.status(200).json({Message:"Producto registrado con exito"});
   } catch (error) {
     console.error('Error registrando un pago', error);

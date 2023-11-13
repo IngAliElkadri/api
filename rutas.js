@@ -154,10 +154,10 @@ ruter.get('/usuario/verdeliverys/', async (req, res) => {
   try {
     const operacion = await consultasbd.Vdeliverysusu();
     if (operacion && operacion.length > 1 && operacion[0].length > 0) {
-      res.status(200).json(operacion[0][0]);
+      res.status(200).json(operacion[0]);
     }
     else{
-      res.status(200).json({Message: "No hay reportes"});
+      res.status(200).json({Message: "No hay deliverys"});
     }
   } catch (error) {
     console.error('Error viendo reportes de pagos', error);

@@ -210,7 +210,7 @@ async function Repedido(id_pedido,id_cliente,id_reportante,id_producto,cantidad,
   }
 }
 async function Vdeliverysusu(){
-  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=2;';
+  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=1;';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta);

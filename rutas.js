@@ -61,9 +61,17 @@ ruter.post('/inicioSesion', async (req, res) => {
 
 ruter.post('/usuario/reportarpagos', async (req, res) => {
   try {
-    const { id_reportante, referencia,monto, banco_id, estado_id} = req.body;
-    const operacion = await consultasbd.Repago(id_reportante, referencia,monto, banco_id, estado_id);
-    res.status(200).json({Message:"Producto registrado con exito"});
+    const { id_reportante, referencia,monto, cod_banco, estado_id} = req.body;
+    const obteneridbanco = await consultasbd.obteneridbanco(cod_banco);
+    if (obteneridbanco && obteneridbanco.length > 1 && obteneridbanco[0].length > 0){
+        const banco_id = obteneridbanco[0][0].id;
+        console.log(banco_id);
+        const operacion = await consultasbd.Repago(id_reportante, referencia,monto, banco_id, estado_id);
+        res.status(200).json({Message:"Pago registrado con exito"});
+    }
+    else{
+      res.status(500).json({Message:"Banco no conseguido"});
+    }
   } catch (error) {
     console.error('Error registrando un pago', error);
     res.status(500).json({ message: 'Error en /reportarpagos' });
@@ -162,6 +170,143 @@ ruter.get('/usuario/verdeliverys/', async (req, res) => {
   } catch (error) {
     console.error('Error viendo reportes de pagos', error);
     res.status(500).json({ message: 'Error en /usuario/verdeliverys/' });
+  }
+});
+// RUTAS ENCARGADOS
+ruter.get('/encargado/verbancos/', async (req, res) => {
+  try {
+    const operacion = await consultasbd.Vbancos();
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay bancos registrados"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de Bancos', error);
+    res.status(500).json({ message: 'Error en /usuario/verbancos/' });
+  }
+});
+ruter.post('/encargado/Registrarbanco/', async (req, res) => {
+  try {
+    const {cod_banco,nombre_banco,cuenta } = req.body;
+    const operacion = await consultasbd.Rebanco(cod_banco,nombre_banco,cuenta);
+    res.status(200).json({Message:"Banco registrado con exito"});
+  } catch (error) {
+    console.error('Error registrando un banco', error);
+    res.status(500).json({ message: 'Error en /encargado/verbancos/' });
+  }
+});
+ruter.get('/encargado/versucursales/', async (req, res) => {
+  try {
+    const operacion = await consultasbd.Vsucursales();
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay sucursales registradas"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de sucursales', error);
+    res.status(500).json({ message: 'Error en /encargado/versucursales/' });
+  }
+});
+ruter.post('/encargado/Registrarsucursal/', async (req, res) => {
+  try {
+    const {nombre_sucursal,direccion,empresa } = req.body;
+    const operacion = await consultasbd.Resucursal(nombre_sucursal,direccion,empresa);
+    res.status(200).json({Message:"Sucursal registrada con exito"});
+  } catch (error) {
+    console.error('Error registrando una sucursal', error);
+    res.status(500).json({ message: 'Error en /encargado/Registrarsucursal/' });
+  }
+});
+ruter.get('/encargado/versucursal/pagos-aprobados/:id_sucursal', async (req, res) => {
+  try {
+    const id_sucursal= req.params.id_sucursal;
+    const operacion = await consultasbd.PagosAppSucursal(id_sucursal);
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay reportes"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de pagos', error);
+    res.status(500).json({ message: 'Error en /encargado/versucursal/pagos-aprobados/' });
+  }
+});
+ruter.get('/encargado/versucursal/TodosPagos/:id_sucursal', async (req, res) => {
+  try {
+    const id_sucursal= req.params.id_sucursal;
+    const operacion = await consultasbd.TodosPagosEnSucursal(id_sucursal);
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay reportes"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de pagos', error);
+    res.status(500).json({ message: 'Error en /encargado/versucursal/TodosPagos/' });
+  }
+});
+ruter.get('/encargado/versucursal/deliverys-aprobados/:id_sucursal', async (req, res) => {
+  try {
+    const id_sucursal= req.params.id_sucursal;
+    const operacion = await consultasbd.DeliverysAPPEnSucursal(id_sucursal);
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay deliverys aprobados"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de deliverys aprobados', error);
+    res.status(500).json({ message: 'Error en /encargado/versucursal/deliverys-aprobados/' });
+  }
+});
+ruter.get('/encargado/versucursal/usuarios/:id_sucursal', async (req, res) => {
+  try {
+    const id_sucursal= req.params.id_sucursal;
+    const operacion = await consultasbd.usuariosEnSucursal(id_sucursal);
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay usuarios"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de pagos', error);
+    res.status(500).json({ message: 'Error en /encargado/versucursal/usuarios/' });
+  }
+});
+ruter.get('/encargado/Pagospendientes/', async (req, res) => {
+  try {
+    const operacion = await consultasbd.Obtenerpagospendientes();
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay pagos pendientes"});
+    }
+  } catch (error) {
+    console.error('Error viendo reportes de pagos pendientes', error);
+    res.status(500).json({ message: 'Error en /encargado/Pagospendientes/' });
+  }
+});
+ruter.get('/encargado/verusuarios/', async (req, res) => {
+  try {
+    const operacion = await consultasbd.Todosusuarios();
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay usuarios"});
+    }
+  } catch (error) {
+    console.error('Error viendo lista de usuarios', error);
+    res.status(500).json({ message: 'Error en /encargado/verusuarios/' });
   }
 });
 module.exports = ruter;

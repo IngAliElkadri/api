@@ -101,6 +101,23 @@ async function ExisUsuario(nombre) {
       throw error; // COMPROBAR NOMBRE USUARIO SI ESTA EXISTENTE
     }
   }
+  async function obteneridbanco(cod_banco){
+    const consulta = 'SELECT bancos.id FROM bancos where bancos.cod_banco=?;';
+    const conexion =await conectarBaseDeDatos()
+    try {
+      const result = await conexion.query(consulta, [cod_banco]);
+      conexion.end();
+      console.log('CONEXION CERRADA');
+      if (result.length > 0) {
+        return result
+      } else {
+        return [{ Mensaje: 'No existe banco registrado con ese codigo' }];
+      }
+    } catch (error) {
+      console.log('Error al obtener banco id:', error);
+      throw error; 
+    }
+  }
 async function registrarToken(id_usu,token,dura_token){
   const consulta ='INSERT INTO logeos(id_usuario, token, dura_token) VALUES (?,?,?)'
   const conexion =await conectarBaseDeDatos()
@@ -137,7 +154,7 @@ async function obtenerUltimoToken(id){
   }
 }
 async function VpagosUsu(id_reportante){
-  const consulta = 'SELECT p.id,p.referencia,p.monto, e.estado AS nombre_estado, u.usuario AS nombre_responsable FROM pagos p JOIN estados e ON p.estado_id = e.id JOIN usuarios u ON p.responsable_estado = u.id WHERE p.id_reportante = ? AND DATE(p.fecha_emision) = CURDATE();';
+  const consulta = 'SELECT p.id,p.referencia,p.monto,b.nombre AS nombre_banco, e.estado AS nombre_estado, u.usuario AS nombre_responsable FROM pagos p JOIN estados e ON p.estado_id = e.id JOIN usuarios u ON p.responsable_estado = u.id JOIN bancos b ON p.banco_id = b.id WHERE p.id_reportante = ? AND DATE(p.fecha_emision) = CURDATE();';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta, [id_reportante]);
@@ -210,7 +227,7 @@ async function Repedido(id_pedido,id_cliente,id_reportante,id_producto,cantidad,
   }
 }
 async function Vdeliverysusu(){
-  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=1;';
+  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre AS nombre_producto,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=1;';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta);
@@ -223,6 +240,167 @@ async function Vdeliverysusu(){
     }
   } catch (error) {
     console.log('Error al obtener registro de deliverys:', error);
+    throw error; 
+  }
+}
+async function Vbancos(){
+  const consulta = 'SELECT bancos.cod_banco, bancos.nombre,bancos.cuenta FROM `bancos` WHERE 1';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay bancos registrados' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de bancos:', error);
+    throw error; 
+  }
+}
+async function Rebanco(cod_banco,nombre_banco,cuenta) {
+  const consulta = 'INSERT INTO bancos(cod_banco, nombre, cuenta) VALUES (?,?,?)';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta, [cod_banco,nombre_banco,cuenta]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    console.log('Banco registrado con exito');
+  } catch (error) {
+    console.log('Error al registrar pedido:', error);
+    throw error; 
+  }
+}
+async function Vsucursales(){
+  const consulta = 'SELECT * FROM sucursales WHERE 1';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay sucursales registradas' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de sucursales:', error);
+    throw error; 
+  }
+}
+async function Resucursal(nombre_sucursal,direccion,empresa) {
+  const consulta = 'INSERT INTO sucursales(nombre, direccion, empresa) VALUES (?,?,?)';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta, [nombre_sucursal,direccion,empresa]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    console.log('Sucursal registrada con exito');
+  } catch (error) {
+    console.log('Error al registrar sucursal:', error);
+    throw error; 
+  }
+}
+async function PagosAppSucursal(id_sucursal){
+  const consulta = 'SELECT p.id,u_reportante.usuario AS nombre_reportante,p.referencia,p.monto,b.nombre AS nombre_banco, e.estado AS nombre_estado, u.usuario AS nombre_responsable FROM pagos p JOIN estados e ON p.estado_id = e.id JOIN usuarios u ON p.responsable_estado = u.id JOIN usuarios u_reportante ON p.id_reportante = u_reportante.id JOIN bancos b ON p.banco_id = b.id JOIN sucursales s ON u.sucursal= s.id WHERE u_reportante.sucursal = ? AND p.estado_id=2 AND DATE(p.fecha_emision) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[id_sucursal]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay pagos aprobados hoy en esta sucursal' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de pagos aprobados en la sucursal:', error);
+    throw error; 
+  }
+}async function TodosPagosEnSucursal(id_sucursal){
+  const consulta = 'SELECT p.id,u_reportante.usuario AS nombre_reportante,p.referencia,p.monto,b.nombre AS nombre_banco, e.estado AS nombre_estado, u.usuario AS nombre_responsable FROM pagos p JOIN estados e ON p.estado_id = e.id JOIN usuarios u ON p.responsable_estado = u.id JOIN usuarios u_reportante ON p.id_reportante = u_reportante.id JOIN bancos b ON p.banco_id = b.id JOIN sucursales s ON u.sucursal= s.id WHERE u_reportante.sucursal = ? AND DATE(p.fecha_emision) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[id_sucursal]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay pagos hoy en esta sucursal' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de pagos en la sucursal:', error);
+    throw error; 
+  }
+}
+async function DeliverysAPPEnSucursal(id_sucursal){
+  const consulta = 'SELECT d.id,d.id_pedido,us.usuario,es.estado, usres.usuario from deliverys d JOIN pedidos pe ON d.id_pedido = pe.id_pedido JOIN usuarios us ON pe.id_reportante = us.id JOIN usuarios usres ON pe.responsable_id = usres.id JOIN estados es ON pe.estado_pedido = es.id where us.sucursal = ? AND pe.estado_pedido=2 AND DATE(pe.fecha_reportado) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[id_sucursal]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay deliverys aprobados hoy en esta sucursal' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de deliverys aprobados en la sucursal:', error);
+    throw error; 
+  }
+}
+async function usuariosEnSucursal(id_sucursal){
+  const consulta = 'SELECT usuarios.id,usuarios.usuario,usuarios.correo,usuarios.cedula,admins.nombre as rango FROM `usuarios` JOIN admins ON usuarios.nadmin = admins.id WHERE usuarios.sucursal=?;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[id_sucursal]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay usuarios en esta sucursal' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de usuarios en la sucursal:', error);
+    throw error; 
+  }
+}
+async function Obtenerpagospendientes(){
+  const consulta = 'SELECT p.referencia,p.monto, ba.nombre AS Banco ,us.usuario AS Reportante,su.nombre AS sucursal FROM pagos p JOIN usuarios us ON p.id_reportante = us.id JOIN sucursales su ON us.sucursal = su.id JOIN bancos ba ON p.banco_id = ba.id WHERE p.estado_id=1 AND DATE(p.fecha_emision) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay pagos pendientes' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de pagos pendientes:', error);
+    throw error; 
+  }
+}
+async function Todosusuarios(){
+  const consulta = 'SELECT * FROM usuarios WHERE 1;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay pagos pendientes' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de pagos pendientes:', error);
     throw error; 
   }
 }
@@ -239,5 +417,16 @@ module.exports ={
     comExicliente,
     Repedido,
     Redelivery,
-    Vdeliverysusu
+    Vdeliverysusu,
+    obteneridbanco,
+    Vbancos,
+    Rebanco,
+    Vsucursales,
+    Resucursal,
+    PagosAppSucursal,
+    TodosPagosEnSucursal,
+    usuariosEnSucursal,
+    DeliverysAPPEnSucursal,
+    Obtenerpagospendientes,
+    Todosusuarios
 }

@@ -309,4 +309,78 @@ ruter.get('/encargado/verusuarios/', async (req, res) => {
     res.status(500).json({ message: 'Error en /encargado/verusuarios/' });
   }
 });
+ruter.get('/encargado/verdeliveryspendientes/', async (req, res) => {
+  try {
+    const operacion = await consultasbd.Obtenerdeliveryspendientes();
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay deliverys pendientes"});
+    }
+  } catch (error) {
+    console.error('Error viendo lista de deliverys pendientes', error);
+    res.status(500).json({ message: 'Error en /encargado/verdeliveryspendientes/' });
+  }
+});
+ruter.post('/encargado/actualizar/estadodelivery/', async (req, res) => {
+  try {
+    const {estado_pedido,responsable_id,pedido_id } = req.body;
+    const operacion = await consultasbd.darestadopedido(estado_pedido,responsable_id,pedido_id);
+    res.status(200).json({Message:"Estado actualizado con exito"});
+  } catch (error) {
+    console.error('Error actualizando estado pedido', error);
+    res.status(500).json({ message: 'Error en /encargado/actualizar/estadodelivery/' });
+  }
+});
+ruter.post('/encargado/actualizar/estadopago/', async (req, res) => {
+  try {
+    const {estado_pago,responsable_estado,ref_pago} = req.body;
+    const operacion = await consultasbd.darestadopago(estado_pago,responsable_estado,ref_pago);
+    res.status(200).json({Message:"Estado actualizado con exito"});
+  } catch (error) {
+    console.error('Error actualizando estado pedido', error);
+    res.status(500).json({ message: 'Error en /encargado/actualizar/estadopago/' });
+  }
+});
+ruter.post('/encargado/usuarios/registrar-usuario/', async (req, res) => {
+  try {
+    const {correo,cedula,usuario,clave,nadmin,sucursal} = req.body;
+    const operacion = await consultasbd.Reusuario(correo,cedula,usuario,clave,nadmin,sucursal);
+    res.status(200).json({Message:"Usuario registrado con exito"});
+  } catch (error) {
+    console.error('Error registrando usuario', error);
+    res.status(500).json({ message: 'Error en /encargado/usuarios/registrar-usuario/' });
+  }
+});
+ruter.post('/encargado/usuarios/cambiaradm/', async (req, res) => {
+  try {
+    const {nadmin,cedula} = req.body;
+    const operacion = await consultasbd.cambiaradm(nadmin,cedula);
+    res.status(200).json({Message:"Nivel admin de usuario cambiado con exito"});
+  } catch (error) {
+    console.error('Error registrando usuario', error);
+    res.status(500).json({ message: 'Error en /encargado/usuarios/cambiaradm/' });
+  }
+});
+ruter.post('/encargado/usuarios/banusuario/', async (req, res) => {
+  try {
+    const {cedula} = req.body;
+    const operacion = await consultasbd.banearusuario(cedula);
+    res.status(200).json({Message:"Usuario baneado"});
+  } catch (error) {
+    console.error('Error baneando usuario', error);
+    res.status(500).json({ message: 'Error en /encargado/usuarios/banusuario/' });
+  }
+});
+ruter.post('/encargado/usuarios/cambiarusuario-sucursal/', async (req, res) => {
+  try {
+    const {id_sucursal,cedula} = req.body;
+    const operacion = await consultasbd.CambiarUsuarioSucursal(id_sucursal,cedula);
+    res.status(200).json({Message:"Usuario cambiado de sucursal"});
+  } catch (error) {
+    console.error('Error cambiando usuario de sucursal', error);
+    res.status(500).json({ message: 'Error en /encargado/usuarios/cambiarusuario-sucursal/' });
+  }
+});
 module.exports = ruter;

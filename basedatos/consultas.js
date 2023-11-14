@@ -404,6 +404,121 @@ async function Todosusuarios(){
     throw error; 
   }
 }
+async function darestadopedido(estado_pedido,responsable_id,id_pedido){
+  const consulta = 'UPDATE pedidos SET estado_pedido=? ,responsable_id =? WHERE pedidos.id_pedido= ? AND DATE(pedidos.fecha_reportado) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[estado_pedido,responsable_id,id_pedido]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'Actualizacion erronea' }];
+    }
+  } catch (error) {
+    console.log('Error al cambiar el estado del pedido:', error);
+    throw error; 
+  }
+}
+async function darestadopago(estado_pago,responsable_estado,ref_pago){
+  const consulta = 'UPDATE pagos SET estado_id=?,responsable_estado=? WHERE pagos.referencia =? AND DATE(pagos.fecha_emision) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[estado_pago,responsable_estado,ref_pago]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'Actualizacion erronea' }];
+    }
+  } catch (error) {
+    console.log('Error al cambiar el estado del pago:', error);
+    throw error; 
+  }
+}
+async function Obtenerdeliveryspendientes(){
+  const consulta = 'SELECT d.id,d.id_pedido,cl.nombre AS nombre_cliente,cl.apellido AS apellido_cliente,pr.nombre AS nombre_producto,pr.descripcion,p.cantidad,p.precio_u,us.usuario AS reportante,d.nombre_delivery FROM deliverys d JOIN pedidos p ON d.id_pedido = p.id_pedido JOIN estados es ON p.estado_pedido = es.id JOIN usuarios us ON p.id_reportante = us.id JOIN clientes cl ON p.id_cliente = cl.id JOIN productos pr ON p.id_producto = pr.id WHERE p.estado_pedido=1 AND DATE(p.fecha_reportado) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No hay deliverys pendientes' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de deliverys pendientes:', error);
+    throw error; 
+  }
+}
+async function Reusuario(correo,cedula,usuario,clave,nadmin,sucursal) {
+  const consulta = 'INSERT INTO usuarios(correo,cedula,usuario,clave, nadmin, sucursal) VALUES (?,?,?,?,?,?)';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta, [correo,cedula,usuario,clave,nadmin,sucursal]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    console.log('Usuario registrado con exito');
+  } catch (error) {
+    console.log('Error al registrar usuario:', error);
+    throw error; 
+  }
+}
+async function cambiaradm(nadmin,cedula){
+  const consulta = 'UPDATE usuarios SET nadmin=? WHERE usuarios.cedula=?';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[nadmin,cedula]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'Actualizacion erronea' }];
+    }
+  } catch (error) {
+    console.log('Error al cambiar el nivel admin:', error);
+    throw error; 
+  }
+}
+async function banearusuario(cedula){
+  const consulta = 'UPDATE usuarios SET nadmin = 1 WHERE usuarios.cedula = ?';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[cedula]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'Actualizacion erronea' }];
+    }
+  } catch (error) {
+    console.log('Error al cambiar el nivel admin:', error);
+    throw error; 
+  }
+}
+async function CambiarUsuarioSucursal(id_sucursal,cedula){
+  const consulta = 'UPDATE usuarios SET sucursal=? WHERE usuarios.cedula=?';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[id_sucursal,cedula]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'Actualizacion erronea' }];
+    }
+  } catch (error) {
+    console.log('Error al cambiar de sucursal al usuario:', error);
+    throw error; 
+  }
+}
 module.exports ={
     comprobarlogeo,
     registrarToken,
@@ -428,5 +543,12 @@ module.exports ={
     usuariosEnSucursal,
     DeliverysAPPEnSucursal,
     Obtenerpagospendientes,
-    Todosusuarios
+    Todosusuarios,
+    Obtenerdeliveryspendientes,
+    darestadopedido,
+    darestadopago,
+    Reusuario,
+    cambiaradm,
+    banearusuario,
+    CambiarUsuarioSucursal
 }

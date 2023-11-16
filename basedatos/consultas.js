@@ -154,7 +154,7 @@ async function obtenerUltimoToken(id){
   }
 }
 async function VpagosUsu(id_reportante){
-  const consulta = 'SELECT p.id,p.referencia,p.monto,b.nombre AS nombre_banco, e.estado AS nombre_estado, u.usuario AS nombre_responsable FROM pagos p JOIN estados e ON p.estado_id = e.id JOIN usuarios u ON p.responsable_estado = u.id JOIN bancos b ON p.banco_id = b.id WHERE p.id_reportante = ? AND DATE(p.fecha_emision) = CURDATE();';
+  const consulta = 'SELECT p.id,p.referencia,p.monto,b.nombre AS nombre_banco, e.estado AS nombre_estado, u.usuario AS nombre_responsable FROM pagos p JOIN estados e ON p.estado_id = e.id JOIN usuarios u ON p.responsable_estado = u.id JOIN bancos b ON p.banco_id = b.id WHERE p.id_reportante = ? AND p.estado_id= 1 AND DATE(p.fecha_emision) = CURDATE();';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta, [id_reportante]);
@@ -227,7 +227,7 @@ async function Repedido(id_pedido,id_cliente,id_reportante,id_producto,cantidad,
   }
 }
 async function Vdeliverysusu(){
-  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre AS nombre_producto,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=1;';
+  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre AS nombre_producto,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=1 AND DATE(pedidos.fecha_reportado) = CURDATE();';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta);

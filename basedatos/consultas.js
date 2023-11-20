@@ -354,7 +354,7 @@ async function DeliverysAPPEnSucursal(id_sucursal){
   }
 }
 async function usuariosEnSucursal(id_sucursal){
-  const consulta = 'SELECT usuarios.id,usuarios.usuario,usuarios.correo,usuarios.cedula,admins.nombre as rango FROM `usuarios` JOIN admins ON usuarios.nadmin = admins.id WHERE usuarios.sucursal=?;';
+  const consulta = 'SELECT usuarios.id,usuarios.usuario,usuarios.correo,usuarios.cedula,admins.nombre as rango FROM `usuarios` JOIN admins ON usuarios.nadmin = admins.id WHERE usuarios.sucursal=? AND usuarios.nadmin!=1 AND usuarios.nadmin!=2;';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta,[id_sucursal]);
@@ -388,7 +388,7 @@ async function Obtenerpagospendientes(){
   }
 }
 async function Todosusuarios(){
-  const consulta = 'SELECT * FROM usuarios WHERE 1;';
+  const consulta = 'SELECT us.correo,us.cedula,us.usuario,us.clave,us.nadmin,us.sucursal, su.nombre as nombre_sucursal,ad.nombre as nombre_rol,ad.responsabilidad FROM usuarios us JOIN sucursales su ON us.sucursal = su.id JOIN admins ad ON us.nadmin = ad.id WHERE us.id!=4 AND us.nadmin!=1;';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta);

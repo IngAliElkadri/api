@@ -353,14 +353,14 @@ ruter.post('/encargado/usuarios/registrar-usuario/', async (req, res) => {
     res.status(500).json({ message: 'Error en /encargado/usuarios/registrar-usuario/' });
   }
 });
-ruter.post('/encargado/usuarios/cambiaradm/', async (req, res) => {
+ruter.post('/encargado/usuarios/modificarinfo/', async (req, res) => {
   try {
-    const {nadmin,cedula} = req.body;
-    const operacion = await consultasbd.cambiaradm(nadmin,cedula);
-    res.status(200).json({Message:"Nivel admin de usuario cambiado con exito"});
+    const {correo,cedula,usuario,clave,nadmin,sucursal,ci} = req.body;
+    const operacion = await consultasbd.CambiarInfoUsuario(correo,cedula,usuario,clave,nadmin,sucursal,ci);
+    res.status(200).json({Message:"Informacion cambiada con exito"});
   } catch (error) {
-    console.error('Error registrando usuario', error);
-    res.status(500).json({ message: 'Error en /encargado/usuarios/cambiaradm/' });
+    console.error('Error actualizando informacion de usuario', error);
+    res.status(500).json({ message: 'Error en /encargado/usuarios/modificarinfo/' });
   }
 });
 ruter.post('/encargado/usuarios/banusuario/', async (req, res) => {
@@ -373,14 +373,5 @@ ruter.post('/encargado/usuarios/banusuario/', async (req, res) => {
     res.status(500).json({ message: 'Error en /encargado/usuarios/banusuario/' });
   }
 });
-ruter.post('/encargado/usuarios/cambiarusuario-sucursal/', async (req, res) => {
-  try {
-    const {id_sucursal,cedula} = req.body;
-    const operacion = await consultasbd.CambiarUsuarioSucursal(id_sucursal,cedula);
-    res.status(200).json({Message:"Usuario cambiado de sucursal"});
-  } catch (error) {
-    console.error('Error cambiando usuario de sucursal', error);
-    res.status(500).json({ message: 'Error en /encargado/usuarios/cambiarusuario-sucursal/' });
-  }
-});
+
 module.exports = ruter;

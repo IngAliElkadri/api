@@ -468,23 +468,6 @@ async function Reusuario(correo,cedula,usuario,clave,nadmin,sucursal) {
     throw error; 
   }
 }
-async function cambiaradm(nadmin,cedula){
-  const consulta = 'UPDATE usuarios SET nadmin=? WHERE usuarios.cedula=?';
-  const conexion =await conectarBaseDeDatos()
-  try {
-    const result = await conexion.query(consulta,[nadmin,cedula]);
-    conexion.end();
-    console.log('CONEXION CERRADA');
-    if (result.length > 0) {
-      return result
-    } else {
-      return [{ Mensaje: 'Actualizacion erronea' }];
-    }
-  } catch (error) {
-    console.log('Error al cambiar el nivel admin:', error);
-    throw error; 
-  }
-}
 async function banearusuario(cedula){
   const consulta = 'UPDATE usuarios SET nadmin = 1 WHERE usuarios.cedula = ?';
   const conexion =await conectarBaseDeDatos()
@@ -502,11 +485,11 @@ async function banearusuario(cedula){
     throw error; 
   }
 }
-async function CambiarUsuarioSucursal(id_sucursal,cedula){
-  const consulta = 'UPDATE usuarios SET sucursal=? WHERE usuarios.cedula=?';
+async function CambiarInfoUsuario(correo,cedula,usuario,clave,nadmin,sucursal,c_ius){
+  const consulta = 'UPDATE usuarios SET correo=?,cedula=?,usuario=?,clave=?,nadmin=?,sucursal=? WHERE usuarios.cedula=?';
   const conexion =await conectarBaseDeDatos()
   try {
-    const result = await conexion.query(consulta,[id_sucursal,cedula]);
+    const result = await conexion.query(consulta,[correo,cedula,usuario,clave,nadmin,sucursal,c_ius]);
     conexion.end();
     console.log('CONEXION CERRADA');
     if (result.length > 0) {
@@ -515,7 +498,7 @@ async function CambiarUsuarioSucursal(id_sucursal,cedula){
       return [{ Mensaje: 'Actualizacion erronea' }];
     }
   } catch (error) {
-    console.log('Error al cambiar de sucursal al usuario:', error);
+    console.log('Error al cambiar informacion del usuario:', error);
     throw error; 
   }
 }
@@ -548,7 +531,6 @@ module.exports ={
     darestadopedido,
     darestadopago,
     Reusuario,
-    cambiaradm,
     banearusuario,
-    CambiarUsuarioSucursal
+    CambiarInfoUsuario,
 }

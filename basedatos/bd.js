@@ -5,7 +5,7 @@ async function conectarBaseDeDatos() {
         host:'localhost', 
         user: 'root',    
         password: '',
-        database: 'pago_verificado_v02', 
+        database: 'pago_verificado_v03', 
       });
       console.log('Conexión exitosa a la base de datos MySQL.');
       return conexion;

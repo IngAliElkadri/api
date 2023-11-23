@@ -183,16 +183,29 @@ async function Recliente(nombre,apellido,cedula,telefono,direccion) {
     throw error; 
   }
 }
-async function Redelivery(id_pedido,nombre_delivery) {
-  const consulta = 'INSERT INTO deliverys(id_pedido, nombre_delivery) VALUES (?,?)';
+async function Redelivery(nombre_delivery) {
+  const consulta = 'INSERT INTO deliverys(nombre_delivery) VALUES (?)';
   const conexion =await conectarBaseDeDatos()
   try {
-    const result = await conexion.query(consulta, [id_pedido,nombre_delivery]);
+    const result = await conexion.query(consulta, [nombre_delivery]);
     conexion.end();
     console.log('CONEXION CERRADA');
     console.log('Delivery registrado con exito');
   } catch (error) {
     console.log('Error al registrar delivery:', error);
+    throw error; 
+  }
+}
+async function Redetalles(id_producto,cantidad) {
+  const consulta = 'INSERT INTO detalles_pedido (id_pedido, id_producto, cant, total) VALUES ((SELECT MAX(id) FROM pedidos),?,?,? * (SELECT precio FROM productos WHERE id = ?));';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta, [id_producto,cantidad,cantidad,id_producto]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    console.log('Detalle registrado con exito');
+  } catch (error) {
+    console.log('Error al registrar detalle:', error);
     throw error; 
   }
 }
@@ -213,16 +226,50 @@ async function comExicliente(cedula) { //COMPROBAR EXISTENCIA cliente
     throw error; 
   }
 }
-async function Repedido(id_pedido,id_cliente,id_reportante,id_producto,cantidad,precio_u,estado_pedido) {
-  const consulta = 'INSERT INTO pedidos(id_pedido, id_cliente, id_reportante, id_producto, cantidad, precio_u, estado_pedido) VALUES (?,?,?,?,?,?,?)';
+async function Repedido(id_cliente,id_reportante,delivery_id,pago_id,estado_pedido,responsable_id) {
+  const consulta = 'INSERT INTO pedidos(id_cliente, id_reportante, delivery_id, pago_id, estado_pedido, responsable_id) VALUES (?,?,?,?,?,?)';
   const conexion =await conectarBaseDeDatos()
   try {
-    const result = await conexion.query(consulta, [id_pedido,id_cliente,id_reportante,id_producto,cantidad,precio_u,estado_pedido]);
+    const result = await conexion.query(consulta, [id_cliente,id_reportante,delivery_id,pago_id,estado_pedido,responsable_id]);
     conexion.end();
     console.log('CONEXION CERRADA');
     console.log('pedido registrado con exito');
   } catch (error) {
     console.log('Error al registrar pedido:', error);
+    throw error; 
+  }
+}
+async function comExipagoEnpedido(ref,cod_banco) { //COMPROBAR EXISTENCIA cliente
+  const consulta = 'SELECT * FROM pedidos p JOIN pagos pa ON p.pago_id = pa.id JOIN bancos ba ON pa.banco_id = ba.id WHERE pa.referencia=? AND ba.cod_banco=? AND DATE(p.fecha_reportado) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta, [ref,cod_banco]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log('Error en base de datos:', error);
+    throw error; 
+  }
+}
+async function VerPagoregistrado(id_pago) { //COMPROBAR EXISTENCIA cliente
+  const consulta = 'SELECT * FROM pedidos WHERE pedidos.pago_id = ?;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta, [id_pago]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log('Error en base de datos:', error);
     throw error; 
   }
 }
@@ -257,6 +304,22 @@ async function Vbancos(){
     }
   } catch (error) {
     console.log('Error al obtener registro de bancos:', error);
+    throw error; 
+  }
+}async function Vpago(ref,cod_banco){
+  const consulta = 'SELECT pa.id FROM pagos pa JOIN bancos ba ON pa.banco_id = ba.id WHERE pa.referencia=? AND ba.cod_banco=? AND DATE(pa.fecha_emision) = CURDATE();';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[ref,cod_banco]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return false
+    }
+  } catch (error) {
+    console.log('Error al obtener pago:', error);
     throw error; 
   }
 }
@@ -455,6 +518,23 @@ async function Obtenerdeliveryspendientes(){
     throw error; 
   }
 }
+async function Obtenerdelivery(nombre_delivery){
+  const consulta = 'SELECT * FROM deliverys WHERE nombre_delivery=?;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[nombre_delivery]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de deliverys pendientes:', error);
+    throw error; 
+  }
+}
 async function Reusuario(correo,cedula,usuario,clave,nadmin,sucursal) {
   const consulta = 'INSERT INTO usuarios(correo,cedula,usuario,clave, nadmin, sucursal) VALUES (?,?,?,?,?,?)';
   const conexion =await conectarBaseDeDatos()
@@ -515,6 +595,7 @@ module.exports ={
     comExicliente,
     Repedido,
     Redelivery,
+    Obtenerdelivery,
     Vdeliverysusu,
     obteneridbanco,
     Vbancos,
@@ -533,4 +614,8 @@ module.exports ={
     Reusuario,
     banearusuario,
     CambiarInfoUsuario,
+    Redetalles,
+    comExipagoEnpedido,
+    Vpago,
+    VerPagoregistrado
 }

@@ -196,16 +196,33 @@ async function Redelivery(nombre_delivery) {
     throw error; 
   }
 }
-async function Redetalles(id_producto,cantidad) {
-  const consulta = 'INSERT INTO detalles_pedido (id_pedido, id_producto, cant, total) VALUES ((SELECT MAX(id) FROM pedidos),?,?,? * (SELECT precio FROM productos WHERE id = ?));';
+async function Redetalles(idpedido,id_producto,cantidad) {
+  const consulta = 'INSERT INTO detalles_pedido(id_pedido, id_producto, cant, total) VALUES (?,?,?,? * (SELECT precio FROM productos WHERE id = ?))';
   const conexion =await conectarBaseDeDatos()
   try {
-    const result = await conexion.query(consulta, [id_producto,cantidad,cantidad,id_producto]);
+    const result = await conexion.query(consulta, [idpedido,id_producto,cantidad,cantidad,id_producto]);
     conexion.end();
     console.log('CONEXION CERRADA');
     console.log('Detalle registrado con exito');
   } catch (error) {
     console.log('Error al registrar detalle:', error);
+    throw error; 
+  }
+}
+async function ObidPedidoConCI(ref) {
+  const consulta = 'SELECT pe.id FROM pedidos pe JOIN pagos pa ON pe.pago_id = pa.id WHERE pa.referencia = ?;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta, [ref]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'No existen reportes de pagos' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener registro de pagos:', error);
     throw error; 
   }
 }
@@ -274,7 +291,7 @@ async function VerPagoregistrado(id_pago) { //COMPROBAR EXISTENCIA cliente
   }
 }
 async function Vdeliverysusu(){
-  const consulta = 'SELECT pedidos.id_pedido,clientes.nombre,clientes.apellido,productos.nombre AS nombre_producto,pedidos.cantidad,pedidos.precio_u, clientes.direccion,usuarios.usuario, deliverys.nombre_delivery, estados.estado,pedidos.fecha_reportado FROM pedidos JOIN deliverys ON pedidos.id_pedido = deliverys.id_pedido JOIN clientes ON pedidos.id_cliente = clientes.id JOIN productos ON pedidos.id_producto = productos.id JOIN estados ON pedidos.estado_pedido = estados.id JOIN usuarios ON pedidos.id_reportante = usuarios.id WHERE pedidos.estado_pedido=1 AND DATE(pedidos.fecha_reportado) = CURDATE();';
+  const consulta = 'SELECT pe.id,cl.nombre,cl.apellido,cl.direccion,us.usuario, de.nombre_delivery, es.estado,pe.fecha_reportado, pag.referencia FROM pedidos pe JOIN clientes cl ON pe.id_cliente = cl.id JOIN usuarios us ON pe.responsable_id = us.id JOIN deliverys de ON pe.delivery_id = de.id JOIN estados es ON pe.estado_pedido = es.id JOIN pagos pag ON pe.pago_id = pag.id WHERE pe.estado_pedido=1 AND DATE(pe.fecha_reportado) = CURDATE();';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta);
@@ -400,7 +417,7 @@ async function PagosAppSucursal(id_sucursal){
   }
 }
 async function DeliverysAPPEnSucursal(id_sucursal){
-  const consulta = 'SELECT d.id,d.id_pedido,us.usuario,es.estado, usres.usuario from deliverys d JOIN pedidos pe ON d.id_pedido = pe.id_pedido JOIN usuarios us ON pe.id_reportante = us.id JOIN usuarios usres ON pe.responsable_id = usres.id JOIN estados es ON pe.estado_pedido = es.id where us.sucursal = ? AND pe.estado_pedido=2 AND DATE(pe.fecha_reportado) = CURDATE();';
+  const consulta = 'SELECT pe.id,cl.nombre,cl.apellido,cl.direccion, cl.cedula,us.usuario AS nom_reportante, pag.referencia,de.nombre_delivery, usuu.usuario AS nom_respo FROM pedidos pe JOIN deliverys de ON pe.delivery_id = de.id JOIN clientes cl ON pe.id_cliente = cl.id JOIN usuarios us ON pe.id_reportante = us.id JOIN pagos pag ON pe.pago_id = pag.id JOIN usuarios usuu ON pe.responsable_id = usuu.id WHERE us.sucursal=? AND pe.estado_pedido=2 AND DATE(pe.fecha_reportado) = CURDATE();';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta,[id_sucursal]);
@@ -417,7 +434,7 @@ async function DeliverysAPPEnSucursal(id_sucursal){
   }
 }
 async function usuariosEnSucursal(id_sucursal){
-  const consulta = 'SELECT usuarios.id,usuarios.usuario,usuarios.correo,usuarios.cedula,admins.nombre as rango FROM `usuarios` JOIN admins ON usuarios.nadmin = admins.id WHERE usuarios.sucursal=? AND usuarios.nadmin!=1 AND usuarios.nadmin!=2;';
+  const consulta = 'SELECT usuarios.id,usuarios.usuario,usuarios.correo,usuarios.cedula,admins.nombre as rango FROM `usuarios` JOIN admins ON usuarios.nadmin = admins.id WHERE usuarios.sucursal=? AND usuarios.nadmin!=1 AND usuarios.nadmin!=4;';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta,[id_sucursal]);
@@ -468,7 +485,7 @@ async function Todosusuarios(){
   }
 }
 async function darestadopedido(estado_pedido,responsable_id,id_pedido){
-  const consulta = 'UPDATE pedidos SET estado_pedido=? ,responsable_id =? WHERE pedidos.id_pedido= ? AND DATE(pedidos.fecha_reportado) = CURDATE();';
+  const consulta = 'UPDATE pedidos SET estado_pedido=?,responsable_id=? WHERE pedidos.id=? AND DATE(pedidos.fecha_reportado) = CURDATE();';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta,[estado_pedido,responsable_id,id_pedido]);
@@ -502,7 +519,7 @@ async function darestadopago(estado_pago,responsable_estado,ref_pago){
   }
 }
 async function Obtenerdeliveryspendientes(){
-  const consulta = 'SELECT d.id,d.id_pedido,cl.nombre AS nombre_cliente,cl.apellido AS apellido_cliente,pr.nombre AS nombre_producto,pr.descripcion,p.cantidad,p.precio_u,us.usuario AS reportante,d.nombre_delivery FROM deliverys d JOIN pedidos p ON d.id_pedido = p.id_pedido JOIN estados es ON p.estado_pedido = es.id JOIN usuarios us ON p.id_reportante = us.id JOIN clientes cl ON p.id_cliente = cl.id JOIN productos pr ON p.id_producto = pr.id WHERE p.estado_pedido=1 AND DATE(p.fecha_reportado) = CURDATE();';
+  const consulta = 'SELECT pe.id,cl.nombre,cl.apellido,cl.direccion, cl.cedula,us.usuario AS nom_reportante, pag.referencia,de.nombre_delivery FROM pedidos pe JOIN deliverys de ON pe.delivery_id = de.id JOIN clientes cl ON pe.id_cliente = cl.id JOIN usuarios us ON pe.id_reportante = us.id JOIN pagos pag ON pe.pago_id = pag.id WHERE pe.estado_pedido=1 AND DATE(pe.fecha_reportado) = CURDATE();';
   const conexion =await conectarBaseDeDatos()
   try {
     const result = await conexion.query(consulta);
@@ -617,5 +634,6 @@ module.exports ={
     Redetalles,
     comExipagoEnpedido,
     Vpago,
-    VerPagoregistrado
+    VerPagoregistrado,
+    ObidPedidoConCI
 }

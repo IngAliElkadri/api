@@ -143,15 +143,25 @@ ruter.post('/usuario/generarpedido', async (req, res) => {
 });
 ruter.post('/usuario/registrarProducto', async (req, res) => {
   try {
-    const {nombre_producto, descripcion, precio} = req.body;
+    const {pago,nombre_producto, descripcion, precio,cantidad} = req.body;
     const verificarprod = await consultasbd.comExiPro(nombre_producto, descripcion);
     const operacion = verificarprod;
     if (verificarprod && verificarprod.length > 1 && verificarprod[0].length > 0){
-      res.status(200).json(operacion[0]);
+      const idprod = operacion[0][0].id;
+      const Obid = await consultasbd.ObidPedidoConCI(pago);
+      const idpedido = Obid[0][0].id;
+      const registrarDe= await consultasbd.Redetalles(idpedido,idprod,cantidad);
+      res.status(200).json({Exito:"Producto agregado a detalles"});
     }
     else{
       const registrarProducto = await consultasbd.reProducto(nombre_producto, descripcion, precio);
-      res.status(200).json({Message:"Producto registrado exitosamente"});
+      const verificarprod = await consultasbd.comExiPro(nombre_producto, descripcion);
+      const operacion = verificarprod;
+      const idprod = operacion[0][0].id;
+      const Obid = await consultasbd.ObidPedidoConCI(pago);
+      const idpedido = Obid[0][0].id;
+      const registrarDe= await consultasbd.Redetalles(idpedido,idprod,cantidad);
+      res.status(200).json({Exito:"Producto registrado y agregado a detalles"});
     }
   } catch (error) {
     console.error('Error registrando un producto', error);

@@ -5,6 +5,9 @@ const bcrypt = require('bcrypt');
 const consultasbd = require('./basedatos/consultas');
 const secretkey = 'AF84565599ALI';
 const bodyParser = require('body-parser');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const fs = require('fs');
+const moment = require('moment'); 
 async function verificaToken(token, secretkey, informacionPe = {}) {
   try {
     const decodedToken = jwt.verify(token, secretkey);
@@ -40,6 +43,7 @@ async function manejarToken(usuarioId, secretkey) {
 }
 
 ruter.use(express.json());
+const csvPath = 'reporte_pagos_en_sucursal.csv';
 
 // Ruta iniciosesion
 ruter.post('/inicioSesion', async (req, res) => {
@@ -392,6 +396,55 @@ ruter.post('/encargado/usuarios/banusuario/', async (req, res) => {
   } catch (error) {
     console.error('Error baneando usuario', error);
     res.status(500).json({ message: 'Error en /encargado/usuarios/banusuario/' });
+  }
+});
+ruter.get('/reporte/pagos_en_sucursal/:id', async (req, res) => {
+  const sucursalId = req.params.id;
+
+  try {
+    const operacion = await consultasbd.TodosPagosEnSucursal(sucursalId);
+    if (operacion && operacion.length > 0) {
+      const datosConInformacionExtra = operacion[0].map((registro) => ({
+        fecha: moment().format('YYYY-MM-DD'),
+        sucursal: sucursalId,
+        nombre_reportante: registro.nombre_reportante, // Corregido aquí
+        referencia: registro.referencia,
+        monto: registro.monto,
+        nombre_banco: registro.nombre_banco,
+        nombre_estado: registro.nombre_estado,
+        nombre_responsable: registro.nombre_responsable,
+      }));
+
+      const csvWriter = createCsvWriter({
+        path: csvPath,
+        header: [
+          { id: 'fecha', title: 'Fecha' },
+          { id: 'sucursal', title: 'Sucursal' },
+          { id: 'nombre_reportante', title: 'Nombre Reportante' },
+          { id: 'referencia', title: 'Referencia' },
+          { id: 'monto', title: 'Monto' },
+          { id: 'nombre_banco', title: 'Nombre Banco' },
+          { id: 'nombre_estado', title: 'Nombre Estado' },
+          { id: 'nombre_responsable', title: 'Nombre Responsable' },
+        ],
+        append: fs.existsSync(csvPath),
+      });
+
+      csvWriter.writeRecords(datosConInformacionExtra)
+        .then(() => {
+          console.log('Datos agregados al archivo CSV con éxito');
+          res.status(200).json({ message: 'Datos registrados en CSV correctamente' });
+        })
+        .catch((error) => {
+          console.error('Error al agregar datos al archivo CSV:', error);
+          res.status(500).json({ message: 'Error al generar el reporte en CSV' });
+        });
+    } else {
+      res.status(200).json({ Message: "No hay pagos en la sucursal" });
+    }
+  } catch (error) {
+    console.error('Error viendo lista de pagos en sucursal', error);
+    res.status(500).json({ message: 'Error en /reporte/pagos_en_sucursal/:id' });
   }
 });
 

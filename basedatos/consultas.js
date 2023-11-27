@@ -95,10 +95,10 @@ async function ExisUsuario(nombre) {
       const result = await conexion.query(consulta, [id_reportante,referencia,monto,banco_id,estado_id]);
       conexion.end();
       console.log('CONEXION CERRADA');
-      console.log('Producto registrado con exito');
+      console.log('Pago registrado con exito');
     } catch (error) {
       console.log('Error al verificar si el usuario está disponible:', error);
-      throw error; // COMPROBAR NOMBRE USUARIO SI ESTA EXISTENTE
+      throw error; 
     }
   }
   async function obteneridbanco(cod_banco){
@@ -599,6 +599,40 @@ async function CambiarInfoUsuario(correo,cedula,usuario,clave,nadmin,sucursal,c_
     throw error; 
   }
 }
+async function obtenerroles(){
+  const consulta = 'SELECT * FROM admins WHERE admins.id!=1;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'Fallo la obtención erronea' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener roles:', error);
+    throw error; 
+  }
+}
+async function VerificarExPago(ref,banco){
+  const consulta = 'SELECT * FROM pagos pa WHERE pa.referencia=? AND pa.banco_id=?;';
+  const conexion =await conectarBaseDeDatos()
+  try {
+    const result = await conexion.query(consulta,[ref,banco]);
+    conexion.end();
+    console.log('CONEXION CERRADA');
+    if (result.length > 0) {
+      return result
+    } else {
+      return [{ Mensaje: 'Fallo la obtención' }];
+    }
+  } catch (error) {
+    console.log('Error al obtener roles:', error);
+    throw error; 
+  }
+}
 module.exports ={
     comprobarlogeo,
     registrarToken,
@@ -635,5 +669,7 @@ module.exports ={
     comExipagoEnpedido,
     Vpago,
     VerPagoregistrado,
-    ObidPedidoConCI
+    ObidPedidoConCI,
+    obtenerroles,
+    VerificarExPago,
 }

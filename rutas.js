@@ -69,8 +69,14 @@ ruter.post('/usuario/reportarpagos', async (req, res) => {
     const obteneridbanco = await consultasbd.obteneridbanco(cod_banco);
     if (obteneridbanco && obteneridbanco.length > 1 && obteneridbanco[0].length > 0){
        const banco_id = obteneridbanco[0][0].id;
+       const exispago = await consultasbd.VerificarExPago(referencia,banco_id);
+       if(exispago[0][0]){
+        res.status(200).json({Pagoon:"El pago ya fue registrado anteriormente"});
+       }
+       else{
        const registrar = await consultasbd.Repago(id_reportante,referencia,monto,banco_id,estado_id);
        res.status(200).json({Message:"El pago fue registrado con exito"});
+       }
     }
     else{
       res.status(500).json({Message:"Error reportando pago"});
@@ -433,7 +439,7 @@ ruter.get('/reporte/pagos_en_sucursal/:id', async (req, res) => {
       csvWriter.writeRecords(datosConInformacionExtra)
         .then(() => {
           console.log('Datos agregados al archivo CSV con éxito');
-          res.status(200).json({ message: 'Datos registrados en CSV correctamente' });
+          res.status(200).json({ exito: 'Datos registrados en CSV correctamente' });
         })
         .catch((error) => {
           console.error('Error al agregar datos al archivo CSV:', error);
@@ -447,5 +453,18 @@ ruter.get('/reporte/pagos_en_sucursal/:id', async (req, res) => {
     res.status(500).json({ message: 'Error en /reporte/pagos_en_sucursal/:id' });
   }
 });
-
+ruter.get('/encargado/obtenerRoles/', async (req, res) => {
+  try {
+    const operacion = await consultasbd.obtenerroles();
+    if (operacion && operacion.length > 1 && operacion[0].length > 0) {
+      res.status(200).json(operacion[0]);
+    }
+    else{
+      res.status(200).json({Message: "No hay roles disponibles"});
+    }
+  } catch (error) {
+    console.error('Error viendo lista de roles', error);
+    res.status(500).json({ message: 'Error en /encargado/obtenerRoles/' });
+  }
+});
 module.exports = ruter;
